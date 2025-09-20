@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Image } from 'expo-image';
-import { View, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import ParallaxScrollView from '@/components/parallax-scroll-view';
@@ -11,6 +11,8 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Book } from '@/constants/booksData';
 import { getSavedBooks, removeBookFromSaved, onSavedBooksChange } from '@/constants/savedBooksData';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { storage } from '@/utils/storage';
+import { showAuthAlert } from '@/utils/authAlert';
 
 // Variabile globale per i libri letti 
 declare global {
@@ -20,20 +22,30 @@ globalThis.readBooks = globalThis.readBooks || [];
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const [user, setUser] = useState<any>(null);
   const [savedBooks, setSavedBooks] = useState<Book[]>([]);
   const [readBooksCount, setReadBooksCount] = useState(0);
-  const [userName] = useState('Lettore Appassionato');
+  const [alertShown, setAlertShown] = useState(false); // Nuovo stato per tracciare se l'alert è già stato mostrato
 
   useEffect(() => {
-    const loadData = () => {
-      const books = getSavedBooks();
-      setSavedBooks(books);
-      setReadBooksCount(globalThis.readBooks.length);
-    };
+    loadUserData();
+    loadBooksData();
+  }, []);
 
-    loadData();
+  const loadUserData = async () => {
+    const userData = await storage.getUser();
+    setUser(userData);
+  };
+
+  const loadBooksData = () => {
+    const books = getSavedBooks();
+    setSavedBooks(books);
+    setReadBooksCount(globalThis.readBooks.length);
     
-    const unsubscribe = onSavedBooksChange(loadData);
+    const unsubscribe = onSavedBooksChange(() => {
+      const updatedBooks = getSavedBooks();
+      setSavedBooks(updatedBooks);
+    });
     
     const interval = setInterval(() => {
       setReadBooksCount(globalThis.readBooks.length);
@@ -43,43 +55,64 @@ export default function ProfileScreen() {
       unsubscribe();
       clearInterval(interval);
     };
-  }, []);
+  };
 
-  const renderBookItem = ({ item }: { item: Book }) => (
-    <TouchableOpacity 
-      onPress={() => {
-        router.push(`/book/${item.id}`);
-      }}
-    >
-      <ThemedView style={styles.bookCard}>
-        <Image 
-          source={{ uri: item.image }} 
-          style={styles.bookImage}
-          contentFit="cover"
-          transition={1000}
-        />
-        <View style={styles.bookInfo}>
-          <ThemedText type="defaultSemiBold" numberOfLines={1}>{item.title}</ThemedText>
-          <ThemedText type="default" style={styles.authorText}>{item.author}</ThemedText>
-          <ThemedText type="subtitle" style={styles.genreText}>{item.genre}</ThemedText>
-          
-          <TouchableOpacity 
-            style={styles.removeButton}
-            onPress={(e) => {
-              e.stopPropagation();
-              removeBookFromSaved(item.id);
-              alert(`"${item.title}" rimosso dai preferiti!`);
-            }}
-          >
-            <Ionicons name="trash-outline" size={16} color="#ff3b30" />
-            <ThemedText style={styles.removeText}>Rimuovi</ThemedText>
-          </TouchableOpacity>
-        </View>
-      </ThemedView>
-    </TouchableOpacity>
-  );
+  // Mostra l'alert quando il componente viene renderizzato e l'utente non è autenticato
+  if (!user && !alertShown) {
+    // Imposta che l'alert è stato mostrato per evitare loop
+    setAlertShown(true);
+    
+    // Mostra l'alert dopo un piccolo delay per evitare problemi di rendering
+    setTimeout(() => {
+      showAuthAlert({
+        message: 'Accedi per vedere il tuo profilo personale',
+        onCancel: () => {
+          router.back();
+        },
+        onLogin: () => {
+          router.push('/(auth)/login');
+        },
+        onRegister: () => {
+          router.push('/(auth)/register');
+        }
+      });
+    }, 100);
+  }
 
-  return (
+  const handleLogout = async () => {
+    await storage.removeUser();
+    setUser(null);
+    Alert.alert('Logout', 'Sei stato disconnesso con successo');
+  };
+
+  // Se l'utente non è autenticato, mostra solo l'header senza contenuto
+  if (!user) {
+    return (
+      <ParallaxScrollView
+        headerBackgroundColor={{ light: '#E8F5E8', dark: '#1B3B1B' }}
+        headerImage={
+          <IconSymbol
+            size={310}
+            color="#74C365"
+            name="person.crop.circle.fill"
+            style={styles.headerImage}
+          />
+        }>
+        
+        <ThemedView style={styles.notAuthenticatedContainer}>
+          <Ionicons name="lock-closed" size={64} color="#ccc" />
+          <ThemedText type="title" style={styles.notAuthenticatedTitle}>
+            Profilo non disponibile
+          </ThemedText>
+          <ThemedText style={styles.notAuthenticatedText}>
+            Accedi o registrati per sbloccare tutte le funzionalità
+          </ThemedText>
+        </ThemedView>
+      </ParallaxScrollView>
+    );
+  }
+
+    return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#E8F5E8', dark: '#1B3B1B' }}
       headerImage={
@@ -100,7 +133,7 @@ export default function ProfileScreen() {
           />
           <View style={styles.profileInfo}>
             <ThemedText type="title" style={styles.userName}>
-              {userName}
+               {user.name}
             </ThemedText>
             <ThemedText style={styles.userStats}>
               {savedBooks.length} libri preferiti • {readBooksCount} libri letti
@@ -127,37 +160,27 @@ export default function ProfileScreen() {
         </View>
       </ThemedView>
 
+      {/* SEZIONE PREFERITI CLICCABILE */}
       <ThemedView style={styles.favoritesSection}>
-        <ThemedText type="title" style={styles.sectionTitle}>
-          I tuoi Preferiti ({savedBooks.length})
-        </ThemedText>
-
-        {savedBooks.length === 0 ? (
-          <ThemedView style={styles.emptyState}>
-            <Ionicons name="heart-dislike" size={48} color="#ccc" />
-            <ThemedText style={styles.emptyText}>
-              Nessun libro nei preferiti
-            </ThemedText>
-            <ThemedText style={styles.emptySubtext}>
-              Torna alla home e aggiungi i tuoi libri preferiti!
-            </ThemedText>
-            <TouchableOpacity 
-              style={styles.homeButton}
-              onPress={() => router.push('/(tabs)')}
-            >
-              <ThemedText style={styles.homeButtonText}>Vai alla Home</ThemedText>
-            </TouchableOpacity>
-          </ThemedView>
-        ) : (
-          <FlatList
-            data={savedBooks}
-            renderItem={renderBookItem}
-            keyExtractor={item => item.id}
-            numColumns={2}
-            columnWrapperStyle={styles.gridContainer}
-            scrollEnabled={false}
-          />
-        )}
+        <TouchableOpacity 
+          onPress={() => router.push('/(tabs)/my-list')}
+          style={styles.favoritesButton}
+        >
+          <View style={styles.favoritesContent}>
+            <View style={styles.favoritesInfo}>
+              <Ionicons name="bookmark" size={24} color="#007AFF" />
+              <View style={styles.favoritesTextContainer}>
+                <ThemedText type="title" style={styles.favoritesTitle}>
+                  I tuoi Preferiti
+                </ThemedText>
+                <ThemedText style={styles.favoritesSubtitle}>
+                  {savedBooks.length} libr{savedBooks.length !== 1 ? 'i' : 'o'} {savedBooks.length !== 1 ? 'salvati' : 'salvato'}
+                </ThemedText>
+              </View>
+            </View>
+            <Ionicons name="arrow-forward" size={24} color="#007AFF" />
+          </View>
+        </TouchableOpacity>
       </ThemedView>
 
       <ThemedView style={styles.readSection}>
@@ -179,7 +202,7 @@ export default function ProfileScreen() {
           <ThemedView style={styles.readBooksList}>
             {savedBooks
               .filter(book => globalThis.readBooks.includes(book.id))
-              .slice(0, 5) // Mostra solo i primi 5 per non appesantire
+              .slice(0, 5)
               .map(book => (
                 <TouchableOpacity 
                   key={book.id}
@@ -217,7 +240,10 @@ export default function ProfileScreen() {
           <ThemedText style={styles.actionButtonText}>Guida e Supporto</ThemedText>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.actionButton}>
+        <TouchableOpacity 
+          style={styles.actionButton}
+          onPress={handleLogout}
+        >
           <Ionicons name="log-out-outline" size={20} color="#ff3b30" />
           <ThemedText style={[styles.actionButtonText, { color: '#ff3b30' }]}>
             Esci
@@ -323,48 +349,6 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: '600',
   },
-  bookCard: {
-    width: 150,
-    marginRight: 12,
-    marginBottom: 16,
-    borderRadius: 8,
-    overflow: 'hidden',
-    backgroundColor: 'white',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1,
-  },
-  bookImage: {
-    width: '100%',
-    height: 200,
-  },
-  bookInfo: {
-    padding: 8,
-  },
-  authorText: {
-    fontSize: 12,
-    marginTop: 2,
-  },
-  genreText: {
-    color: '#666',
-    fontSize: 11,
-    marginTop: 4,
-  },
-  removeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  removeText: {
-    fontSize: 12,
-    color: '#ff3b30',
-    marginLeft: 4,
-  },
-  gridContainer: {
-    justifyContent: 'space-between',
-  },
   readBooksList: {
     backgroundColor: '#f8f8f8',
     padding: 16,
@@ -402,5 +386,52 @@ const styles = StyleSheet.create({
   actionButtonText: {
     marginLeft: 12,
     fontSize: 16,
+  },
+  notAuthenticatedContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+    minHeight: 400,
+  },
+  notAuthenticatedTitle: {
+    marginTop: 20,
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  notAuthenticatedText: {
+    textAlign: 'center',
+    color: '#666',
+    marginBottom: 30,
+  },
+  favoritesButton: {
+    backgroundColor: '#f8f8f8',
+    padding: 20,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  favoritesContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  favoritesInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  favoritesTextContainer: {
+    marginLeft: 16,
+    flex: 1,
+  },
+  favoritesTitle: {
+    fontSize: 18,
+    marginBottom: 4,
+    color: '#000',
+  },
+  favoritesSubtitle: {
+    fontSize: 14,
+    color: '#666',
   },
 });
