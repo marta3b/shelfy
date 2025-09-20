@@ -6,34 +6,40 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { booksData } from '../../constants/booksData';
-import { addBookToSaved, getSavedBooks, onSavedBooksChange, removeBookFromSaved } from '../../constants/savedBooksData';
-
-// Stato per i libri letti (solo in memoria per la sessione)
-let readBooks: string[] = [];
+import { booksData } from '@/constants/booksData';
+import { addBookToSaved, getSavedBooks, onSavedBooksChange, removeBookFromSaved } from '@/constants/savedBooksData';
+import { addBookToRead, removeBookFromRead, isBookRead, onReadBooksChange } from '@/constants/readBooksData';
 
 export default function BookDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
+  
   const book = booksData.find(b => b.id === id);
   const [isAddedToFavorites, setIsAddedToFavorites] = useState(false);
   const [isRead, setIsRead] = useState(false);
 
   useEffect(() => {
-    const checkIfBookIsSaved = () => {
-      const savedBooks = getSavedBooks();
-      const isSaved = savedBooks.some(b => b.id === id);
-      setIsAddedToFavorites(isSaved);
-      
-      // Controlla se il libro è segnato come letto
-      setIsRead(readBooks.includes(id as string));
-    };
-
     checkIfBookIsSaved();
+    checkIfBookIsRead();
+    
+    const unsubscribeSaved = onSavedBooksChange(checkIfBookIsSaved);
+    const unsubscribeRead = onReadBooksChange(checkIfBookIsRead);
 
-    const unsubscribe = onSavedBooksChange(checkIfBookIsSaved);
-    return unsubscribe;
+    return () => {
+      unsubscribeSaved();
+      unsubscribeRead();
+    };
   }, [id]);
+
+  const checkIfBookIsSaved = () => {
+    const savedBooks = getSavedBooks();
+    const isSaved = savedBooks.some(b => b.id === id);
+    setIsAddedToFavorites(isSaved);
+  };
+
+  const checkIfBookIsRead = () => {
+    setIsRead(isBookRead(id as string));
+  };
 
   const handleToggleFavorite = () => {
     if (!book) return;
@@ -51,16 +57,10 @@ export default function BookDetailScreen() {
     if (!book) return;
 
     if (isRead) {
-      // Rimuovi dai libri letti
-      readBooks = readBooks.filter(bookId => bookId !== book.id);
-      setIsRead(false);
+      removeBookFromRead(book.id);
       alert(`"${book.title}" segnato come non letto!`);
     } else {
-      // Aggiungi ai libri letti
-      if (!readBooks.includes(book.id)) {
-        readBooks.push(book.id);
-      }
-      setIsRead(true);
+      addBookToRead(book);
       alert(`"${book.title}" segnato come letto!`);
     }
   };
