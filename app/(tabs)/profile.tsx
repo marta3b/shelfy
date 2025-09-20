@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Image } from 'expo-image';
 import { View, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
@@ -16,26 +16,17 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { storage } from '@/utils/storage';
 import { showAuthAlert } from '@/utils/authAlert';
 
-
 export default function ProfileScreen() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
-
   const [savedBooks, setSavedBooks] = useState<Book[]>([]);
   const [readBooks, setReadBooks] = useState<Book[]>([]);
-
   const [alertShown, setAlertShown] = useState(false); 
-
-  const readBooksCount = readBooks.length;
-
-  useEffect(() => {
-    loadUserData();
-    loadBooksData();
-  }, []);
 
   const loadUserData = async () => {
     const userData = await storage.getUser();
     setUser(userData);
+    setAlertShown(false); // Reset dell'alert quando i dati vengono ricaricati
   };
 
   const loadBooksData = () => {
@@ -44,44 +35,52 @@ export default function ProfileScreen() {
     
     const readBooksData = getReadBooks();
     setReadBooks(readBooksData);
-    
-    const unsubscribeSaved = onSavedBooksChange(() => {
-      const updatedBooks = getSavedBooks();
-      setSavedBooks(updatedBooks);
-    });
-
-    const unsubscribeRead = onReadBooksChange(() => {
-      const updatedReadBooks = getReadBooks();
-      setReadBooks(updatedReadBooks);
-    });
-
-    return () => {
-      unsubscribeSaved();
-      unsubscribeRead();
-    };
   };
 
-  // Mostra l'alert quando il componente viene renderizzato e l'utente non è autenticato
-  if (!user && !alertShown) {
-    // Imposta che l'alert è stato mostrato per evitare loop
-    setAlertShown(true);
-    
-    // Mostra l'alert dopo un piccolo delay per evitare problemi di rendering
-    setTimeout(() => {
-      showAuthAlert({
-        message: 'Accedi per vedere il tuo profilo personale',
-        onCancel: () => {
-          router.back();
-        },
-        onLogin: () => {
-          router.push('/(auth)/login');
-        },
-        onRegister: () => {
-          router.push('/(auth)/register');
-        }
+  // Usa useFocusEffect per ricaricare i dati quando la schermata diventa attiva
+  useFocusEffect(
+    useCallback(() => {
+      loadUserData();
+      loadBooksData();
+
+      const unsubscribeSaved = onSavedBooksChange(() => {
+        const updatedBooks = getSavedBooks();
+        setSavedBooks(updatedBooks);
       });
-    }, 100);
-  }
+
+      const unsubscribeRead = onReadBooksChange(() => {
+        const updatedReadBooks = getReadBooks();
+        setReadBooks(updatedReadBooks);
+      });
+
+      return () => {
+        unsubscribeSaved();
+        unsubscribeRead();
+      };
+    }, [])
+  );
+
+  // Mostra l'alert solo quando il componente è montato e l'utente non è autenticato
+  useEffect(() => {
+    if (!user && !alertShown) {
+      setAlertShown(true);
+      
+      setTimeout(() => {
+        showAuthAlert({
+          message: 'Accedi per vedere il tuo profilo personale',
+          onCancel: () => {
+            router.back();
+          },
+          onLogin: () => {
+            router.push('/(auth)/login');
+          },
+          onRegister: () => {
+            router.push('/(auth)/register');
+          }
+        });
+      }, 100);
+    }
+  }, [user, alertShown]);
 
   const handleLogout = async () => {
     await storage.removeUser();
