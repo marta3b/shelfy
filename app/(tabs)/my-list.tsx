@@ -8,7 +8,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 
 import { Book } from '@/constants/booksData';
-import { getSavedBooks, removeBookFromSaved, onSavedBooksChange } from '@/constants/savedBooksData';
+import { getSavedBooks, onSavedBooksChange } from '@/constants/savedBooksData';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function MyListScreen() {
@@ -16,16 +16,17 @@ export default function MyListScreen() {
   const [savedBooks, setSavedBooks] = useState<Book[]>([]);
 
   useEffect(() => {
-  const loadSavedBooks = () => {
-    const books = getSavedBooks();
-    console.log('Libri caricati:', books.length);
-    setSavedBooks(books);
-  };
-
     loadSavedBooks();
+    
     const unsubscribe = onSavedBooksChange(loadSavedBooks);
     return unsubscribe;
   }, []);
+
+  const loadSavedBooks = () => {
+    const books = getSavedBooks();
+    console.log('Libri salvati trovati:', books.length); // Debug
+    setSavedBooks(books);
+  };
 
   const renderBookItem = ({ item }: { item: Book }) => (
     <TouchableOpacity 
@@ -45,29 +46,9 @@ export default function MyListScreen() {
           <ThemedText type="default" style={styles.authorText}>{item.author}</ThemedText>
           <ThemedText type="subtitle" style={styles.genreText}>{item.genre}</ThemedText>
           
-          <View style={styles.actions}>
-            <TouchableOpacity 
-              style={styles.actionButton}
-              onPress={(e) => {
-                e.stopPropagation();
-                // Segna come letto
-              }}
-            >
-              <Ionicons name="checkmark-circle-outline" size={16} color="#007AFF" />
-              <ThemedText style={styles.actionText}>Letto</ThemedText>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.actionButton}
-              onPress={(e) => {
-                e.stopPropagation();
-                removeBookFromSaved(item.id);
-                alert(`"${item.title}" rimosso dalla lista!`);
-              }}
-            >
-              <Ionicons name="trash-outline" size={16} color="#ff3b30" />
-              <ThemedText style={styles.actionText}>Rimuovi</ThemedText>
-            </TouchableOpacity>
+          {/* Rimosso il pulsante di rimozione */}
+          <View style={styles.viewAction}>
+            <ThemedText style={styles.viewActionText}>Tocca per vedere dettagli</ThemedText>
           </View>
         </View>
       </ThemedView>
@@ -88,6 +69,9 @@ export default function MyListScreen() {
         <ThemedText type="title">La tua lista</ThemedText>
         <ThemedText style={styles.subtitle}>
           I libri che hai salvato per leggerli in seguito
+        </ThemedText>
+        <ThemedText style={styles.countText}>
+          {savedBooks.length} libr{savedBooks.length !== 1 ? 'i' : 'o'} salvat{savedBooks.length !== 1 ? 'i' : 'o'}
         </ThemedText>
       </ThemedView>
 
@@ -201,21 +185,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
   },
-  gridContainer: {
-    justifyContent: 'space-between',
-  },
-  actions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  viewAction: {
     marginTop: 12,
-  },
-  actionButton: {
-    flexDirection: 'row',
+    padding: 8,
+    backgroundColor: '#f8f8f8',
+    borderRadius: 6,
     alignItems: 'center',
   },
-  actionText: {
+  viewActionText: {
     fontSize: 12,
-    marginLeft: 4,
+    color: '#666',
+    fontStyle: 'italic',
+  },
+  gridContainer: {
+    justifyContent: 'space-between',
   },
   headerImage: {
     height: 200,
@@ -223,5 +206,11 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     position: 'absolute',
+  },
+  countText: {
+    fontSize: 14,
+    color: '#2E8B57',
+    marginTop: 4,
+    fontWeight: '600',
   },
 });
