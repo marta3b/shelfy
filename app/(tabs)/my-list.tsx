@@ -45,11 +45,6 @@ export default function MyListScreen() {
           <ThemedText type="defaultSemiBold" numberOfLines={1}>{item.title}</ThemedText>
           <ThemedText type="default" style={styles.authorText}>{item.author}</ThemedText>
           <ThemedText type="subtitle" style={styles.genreText}>{item.genre}</ThemedText>
-          
-          {/* Rimosso il pulsante di rimozione */}
-          <View style={styles.viewAction}>
-            <ThemedText style={styles.viewActionText}>Tocca per vedere dettagli</ThemedText>
-          </View>
         </View>
       </ThemedView>
     </TouchableOpacity>
