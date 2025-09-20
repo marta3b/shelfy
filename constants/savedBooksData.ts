@@ -1,6 +1,15 @@
 import { Book } from './booksData';
 
-let savedBooks: Book[] = [];
+// Dichiarazione della variabile globale
+declare global {
+  var savedBooks: Book[];
+}
+
+// Inizializza solo se non esiste già
+if (!globalThis.savedBooks) {
+  globalThis.savedBooks = [];
+}
+
 const listeners: Array<() => void> = [];
 
 // Funzione per notificare tutti i listener
@@ -9,18 +18,21 @@ const notifyListeners = () => {
 };
 
 export const addBookToSaved = (book: Book, listName: string) => {
-  if (!savedBooks.some(b => b.id === book.id)) {
-    savedBooks.push(book);
+  if (!globalThis.savedBooks.some(b => b.id === book.id)) {
+    globalThis.savedBooks.push(book);
+    console.log('Libro aggiunto:', book.title, 'Totale:', globalThis.savedBooks.length);
     notifyListeners();
   }
 };
 
 export const getSavedBooks = (): Book[] => {
-  return savedBooks; // Restituisce una copia dell'array
+  console.log('Libri salvati recuperati:', globalThis.savedBooks.length);
+  return [...globalThis.savedBooks]; // Restituisce una copia dell'array
 };
 
 export const removeBookFromSaved = (bookId: string) => {
-  savedBooks = savedBooks.filter(book => book.id !== bookId);
+  globalThis.savedBooks = globalThis.savedBooks.filter(book => book.id !== bookId);
+  console.log('Libro rimosso. Totale:', globalThis.savedBooks.length);
   notifyListeners();
 };
 
@@ -33,4 +45,10 @@ export const onSavedBooksChange = (callback: () => void) => {
       listeners.splice(index, 1);
     }
   };
+};
+
+// Funzione di debug per verificare lo stato
+export const debugSavedBooks = () => {
+  console.log('DEBUG - Libri salvati:', globalThis.savedBooks.map(b => b.title));
+  return globalThis.savedBooks;
 };
