@@ -9,23 +9,24 @@ import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 
 import { Book } from '@/constants/booksData';
-import { getSavedBooks, removeBookFromSaved, onSavedBooksChange } from '@/constants/savedBooksData';
+import { getSavedBooks, onSavedBooksChange } from '@/constants/savedBooksData';
+import { getReadBooks, onReadBooksChange} from '@/constants/readBooksData';
+
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { storage } from '@/utils/storage';
 import { showAuthAlert } from '@/utils/authAlert';
 
-// Variabile globale per i libri letti 
-declare global {
-  var readBooks: string[];
-}
-globalThis.readBooks = globalThis.readBooks || [];
 
 export default function ProfileScreen() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
+
   const [savedBooks, setSavedBooks] = useState<Book[]>([]);
-  const [readBooksCount, setReadBooksCount] = useState(0);
-  const [alertShown, setAlertShown] = useState(false); // Nuovo stato per tracciare se l'alert è già stato mostrato
+  const [readBooks, setReadBooks] = useState<Book[]>([]);
+
+  const [alertShown, setAlertShown] = useState(false); 
+
+  const readBooksCount = readBooks.length;
 
   useEffect(() => {
     loadUserData();
@@ -40,20 +41,23 @@ export default function ProfileScreen() {
   const loadBooksData = () => {
     const books = getSavedBooks();
     setSavedBooks(books);
-    setReadBooksCount(globalThis.readBooks.length);
     
-    const unsubscribe = onSavedBooksChange(() => {
+    const readBooksData = getReadBooks();
+    setReadBooks(readBooksData);
+    
+    const unsubscribeSaved = onSavedBooksChange(() => {
       const updatedBooks = getSavedBooks();
       setSavedBooks(updatedBooks);
     });
-    
-    const interval = setInterval(() => {
-      setReadBooksCount(globalThis.readBooks.length);
-    }, 1000);
+
+    const unsubscribeRead = onReadBooksChange(() => {
+      const updatedReadBooks = getReadBooks();
+      setReadBooks(updatedReadBooks);
+    });
 
     return () => {
-      unsubscribe();
-      clearInterval(interval);
+      unsubscribeSaved();
+      unsubscribeRead();
     };
   };
 
@@ -136,7 +140,7 @@ export default function ProfileScreen() {
                {user.name}
             </ThemedText>
             <ThemedText style={styles.userStats}>
-              {savedBooks.length} libri preferiti • {readBooksCount} libri letti
+              {user.email}
             </ThemedText>
           </View>
         </View>
@@ -153,7 +157,7 @@ export default function ProfileScreen() {
           
           <View style={styles.statItem}>
             <ThemedText type="defaultSemiBold" style={styles.statNumber}>
-              {readBooksCount}
+              {readBooks.length}
             </ThemedText>
             <ThemedText style={styles.statLabel}>Letti</ThemedText>
           </View>
@@ -185,10 +189,10 @@ export default function ProfileScreen() {
 
       <ThemedView style={styles.readSection}>
         <ThemedText type="title" style={styles.sectionTitle}>
-          Libri Letti ({readBooksCount})
+          Libri Letti ({readBooks.length})
         </ThemedText>
 
-        {readBooksCount === 0 ? (
+        {readBooks.length === 0 ? (
           <ThemedView style={styles.emptyState}>
             <Ionicons name="book-outline" size={48} color="#ccc" />
             <ThemedText style={styles.emptyText}>
@@ -199,31 +203,50 @@ export default function ProfileScreen() {
             </ThemedText>
           </ThemedView>
         ) : (
-          <ThemedView style={styles.readBooksList}>
-            {savedBooks
-              .filter(book => globalThis.readBooks.includes(book.id))
-              .slice(0, 5)
-              .map(book => (
+          <ThemedView style={styles.readBooksContainer}>
+            <FlatList
+              data={readBooks}
+              keyExtractor={(item) => item.id}
+              scrollEnabled={false}
+              renderItem={({ item }) => (
                 <TouchableOpacity 
-                  key={book.id}
                   style={styles.readBookItem}
-                  onPress={() => router.push(`/book/${book.id}`)}
+                  onPress={() => router.push(`/book/${item.id}`)}
                 >
-                  <Ionicons name="checkmark-circle" size={20} color="#2E8B57" />
-                  <ThemedText style={styles.readBookTitle} numberOfLines={1}>
-                    {book.title}
-                  </ThemedText>
+                  {/* Icona di checkmark fissa (non cliccabile) */}
+                  <View style={styles.checkboxContainer}>
+                    <Ionicons 
+                      name="checkmark-circle" 
+                      size={24} 
+                      color="#2E8B57" 
+                    />
+                  </View>
+                  
+                  <View style={styles.readBookInfo}>
+                    <ThemedText style={styles.readBookTitle} numberOfLines={1}>
+                      {item.title}
+                    </ThemedText>
+                    <ThemedText style={styles.readBookAuthor} numberOfLines={1}>
+                      di {item.author}
+                    </ThemedText>
+                  </View>
+                  
+                  {item.rating && (
+                    <View style={styles.ratingContainer}>
+                      <Ionicons name="star" size={16} color="#FFD700" />
+                      <ThemedText style={styles.ratingText}>
+                        {item.rating}
+                      </ThemedText>
+                    </View>
+                  )}
                 </TouchableOpacity>
-              ))
-            }
-            {readBooksCount > 5 && (
-              <ThemedText style={styles.moreText}>
-                +{readBooksCount - 5} altri libri letti
-              </ThemedText>
-            )}
+              )}
+              ItemSeparatorComponent={() => <View style={styles.separator} />}
+            />
           </ThemedView>
         )}
       </ThemedView>
+
 
       <ThemedView style={styles.actionsSection}>
         <ThemedText type="subtitle" style={styles.sectionTitle}>
@@ -433,5 +456,40 @@ const styles = StyleSheet.create({
   favoritesSubtitle: {
     fontSize: 14,
     color: '#666',
+  },
+  readBooksContainer: {
+    backgroundColor: '#f8f8f8',
+    padding: 16,
+    borderRadius: 12,
+  },
+  checkboxContainer: {
+    marginRight: 12,
+  },
+  readBookInfo: {
+    flex: 1,
+  },
+  readBookAuthor: {
+    fontSize: 14,
+    color: '#666',
+  },
+    ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2E8B57',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginLeft: 8,
+  },
+   ratingText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  separator: {
+    height: 1,
+    backgroundColor: '#eee',
+    marginVertical: 8,
   },
 });
