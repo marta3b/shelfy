@@ -8,7 +8,6 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 
 import { booksData, Book } from '@/constants/booksData';
-import { addBookToSaved } from '@/constants/savedBooksData';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function SearchScreen() {
@@ -50,18 +49,6 @@ export default function SearchScreen() {
           <ThemedText type="defaultSemiBold" numberOfLines={1}>{item.title}</ThemedText>
           <ThemedText type="default" style={styles.authorText}>{item.author}</ThemedText>
           <ThemedText type="subtitle" style={styles.genreText}>{item.genre}</ThemedText>
-          
-          <TouchableOpacity 
-            style={styles.saveButton}
-            onPress={(e) => {
-              e.stopPropagation();
-              addBookToSaved(item, 'preferiti');
-              alert(`"${item.title}" aggiunto ai preferiti!`);
-            }}
-          >
-            <Ionicons name="heart-outline" size={16} color="#ff3b30" />
-            <ThemedText style={styles.saveText}>Salva</ThemedText>
-          </TouchableOpacity>
         </View>
       </ThemedView>
     </TouchableOpacity>
@@ -200,15 +187,17 @@ const styles = StyleSheet.create({
     fontSize: 11,
     marginTop: 4,
   },
-  saveButton: {
-    flexDirection: 'row',
+  viewAction: {
+    marginTop: 12,
+    padding: 8,
+    backgroundColor: '#f8f8f8',
+    borderRadius: 6,
     alignItems: 'center',
-    marginTop: 8,
   },
-  saveText: {
+  viewActionText: {
     fontSize: 12,
-    color: '#ff3b30',
-    marginLeft: 4,
+    color: '#666',
+    fontStyle: 'italic',
   },
   emptyState: {
     alignItems: 'center',
