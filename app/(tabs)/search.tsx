@@ -3,7 +3,6 @@ import { Image } from 'expo-image';
 import { View, StyleSheet, FlatList, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 
-import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 
@@ -46,7 +45,7 @@ export default function SearchScreen() {
           transition={1000}
         />
         <View style={styles.bookInfo}>
-          <ThemedText type="defaultSemiBold" numberOfLines={1}>{item.title}</ThemedText>
+          <ThemedText type="defaultSemiBold" numberOfLines={1} style={styles.titleText}>{item.title}</ThemedText>
           <ThemedText type="default" style={styles.authorText}>{item.author}</ThemedText>
           <ThemedText type="subtitle" style={styles.genreText}>{item.genre}</ThemedText>
         </View>
@@ -55,21 +54,7 @@ export default function SearchScreen() {
   );
 
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#E8F5E8', dark: '#1B3B1B' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/libri-bho.png')}
-          style={styles.headerImage}
-        />
-      }>
-
-      <ThemedView style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <ThemedText type="title">Cerca</ThemedText>
-      </ThemedView>
+    <ScrollView style={styles.container}>
 
       <ThemedView style={styles.searchContainer}>
         <View style={styles.searchInputContainer}>
@@ -110,23 +95,19 @@ export default function SearchScreen() {
           />
         )}
       </ThemedView>
-    </ParallaxScrollView>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    paddingTop: 60,
-  },
-  backButton: {
-    marginRight: 16,
+  container: {
+    flex: 1,
+    backgroundColor: '#FFF9C4',
   },
   searchContainer: {
-    paddingHorizontal: 16,
-    marginBottom: 24,
+    marginBottom: 24, // Ridotto da 24
+    padding:20,
+    backgroundColor: 'rgba(180, 220, 180, 0.6)',
   },
   searchInputContainer: {
     flexDirection: 'row',
@@ -147,20 +128,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   resultsSection: {
+    marginTop: 40,
     paddingHorizontal: 16,
+    padding:20,
     flex: 1,
+    backgroundColor: 'rgba(180, 220, 180, 0.6)',
   },
   sectionTitle: {
-    marginBottom: 16,
-    fontSize: 18,
+    marginBottom: 12, // Ridotto da 16
+    fontSize: 20,
+    color: 'black',
   },
   horizontalList: {
     paddingVertical: 8,
     paddingRight: 16,
+    paddingLeft: 5,
   },
   bookCard: {
-    width: 150,
-    marginRight: 16,
+    width: 140, // Ridotto da 150
+    marginRight: 12, // Ridotto da 16
     borderRadius: 12,
     overflow: 'hidden',
     backgroundColor: 'white',
@@ -172,10 +158,15 @@ const styles = StyleSheet.create({
   },
   bookImage: {
     width: '100%',
-    height: 200,
+    height: 180, // Ridotto da 200
   },
   bookInfo: {
-    padding: 12,
+    padding: 10, // Ridotto da 12
+  },
+  titleText: {
+    fontSize: 16,
+    marginTop: 4,
+    color: '#000',
   },
   authorText: {
     fontSize: 12,
@@ -187,39 +178,21 @@ const styles = StyleSheet.create({
     fontSize: 11,
     marginTop: 4,
   },
-  viewAction: {
-    marginTop: 12,
-    padding: 8,
-    backgroundColor: '#f8f8f8',
-    borderRadius: 6,
-    alignItems: 'center',
-  },
-  viewActionText: {
-    fontSize: 12,
-    color: '#666',
-    fontStyle: 'italic',
-  },
   emptyState: {
     alignItems: 'center',
-    padding: 40,
-    marginTop: 20,
+    padding: 70, // Ridotto da 40
+    marginTop: 16, // Ridotto da 20
+    backgroundColor: 'rgba(180, 220, 180, 0)',
   },
   emptyText: {
-    fontSize: 18,
-    color: '#666',
-    marginTop: 16,
-    marginBottom: 8,
+    fontSize: 16, // Ridotto da 18
+    color: '#000',
+    marginTop: 12, // Ridotto da 16
+    marginBottom: 6, // Ridotto da 8
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#999',
+    color: '#464646ff',
     textAlign: 'center',
-  },
-  headerImage: {
-    height: 200,
-    width: '100%',
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
   },
 });
