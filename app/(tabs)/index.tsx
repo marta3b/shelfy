@@ -3,7 +3,6 @@ import { Image } from 'expo-image';
 import { View, StyleSheet, FlatList, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 
-import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 
@@ -40,7 +39,7 @@ export default function HomeScreen() {
           transition={1000}
         />
         <View style={styles.bookInfo}>
-          <ThemedText type="defaultSemiBold" numberOfLines={1}>{item.title}</ThemedText>
+          <ThemedText type="defaultSemiBold" numberOfLines={1} style={styles.titleText}>{item.title}</ThemedText>
           <ThemedText type="default" style={styles.authorText}>{item.author}</ThemedText>
           <ThemedText type="subtitle" style={styles.genreText}>{item.genre}</ThemedText>
         </View>
@@ -67,22 +66,16 @@ export default function HomeScreen() {
   };
 
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#E8F5E8', dark: '#1B3B1B' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/libri-bho.png')}
-          style={styles.headerImage}
-        />
-      }>
-      
+    <ScrollView style={styles.container}>
       <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Shelfy</ThemedText>
+        <Image
+          source={require('@/assets/images/logo2.png')} // Modifica il percorso con la tua immagine
+          style={styles.logoImage}
+          contentFit="contain"
+          transition={1000}
+        />
         <ThemedText style={styles.subtitle}>La tua libreria personale</ThemedText>
-      </ThemedView>
-
-      <ThemedView style={styles.popularSection}>
-        <ThemedText type="title" style={styles.sectionTitle}>
+        <ThemedText type="title" style={styles.sectionGenreTitle}>
           {selectedGenre ? `Libri di genere: ${selectedGenre}` : 'Generi popolari'}
         </ThemedText>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.genreScroll}>
@@ -108,8 +101,8 @@ export default function HomeScreen() {
 
       {selectedGenre ? (
         <ThemedView style={styles.stepContainer}>
-          <ThemedText type="subtitle">
-            {filteredBooks.length} libro{filteredBooks.length !== 1 ? 'i' : ''} trovati
+          <ThemedText type="subtitle" style={styles.genreTitle}>
+            {filteredBooks.length} libr{filteredBooks.length !== 1 ? 'i' : 'o'} trovat{filteredBooks.length !== 1 ? 'i' : 'o'}
           </ThemedText>
           <FlatList
             data={filteredBooks}
@@ -121,44 +114,62 @@ export default function HomeScreen() {
           />
         </ThemedView>
       ) : (
-        <ScrollView>
+        <View>
           {genreOrder.map(renderGenreSection)}
-        </ScrollView>
+        </View>
       )}
 
       <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Esplora la tua libreria</ThemedText>
-        <ThemedText>
+        <ThemedText type="subtitle" style={styles.sectionGenreTitle}>Esplora la tua libreria</ThemedText>
+        <ThemedText style={styles.subtitle}>
           Seleziona un genere per filtrare i libri o scorri per scoprire tutte le categorie.
         </ThemedText>
       </ThemedView>
-    </ParallaxScrollView>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FFF9C4',
+  },
   titleContainer: {
     alignItems: 'center',
     gap: 8,
     marginBottom: 16,
-    paddingTop: 20,
+    paddingTop: 30,
+    paddingHorizontal: 16,
+    backgroundColor: 'rgba(180, 220, 180, 0.6)',
+  },
+  logoImage: {
+    width: '100%', 
+    height: 100, 
+    borderRadius: 20,
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
+    color: '#535353ff',
+    marginBottom:20,
   },
   stepContainer: {
     gap: 8,
     marginBottom: 8,
     paddingHorizontal: 16,
+    backgroundColor: '#FFF9C4',
+  },
+  sectionGenreTitle: {
+    fontSize: 26,
+    color: 'black',
   },
   genreSection: {
     marginBottom: 24,
+    paddingHorizontal: 16,
   },
   genreTitle: {
-    paddingHorizontal: 16,
     marginBottom: 8,
     fontSize: 20,
+    color:'black'
   },
   bookCard: {
     width: 150,
@@ -179,6 +190,11 @@ const styles = StyleSheet.create({
   bookInfo: {
     padding: 12,
   },
+  titleText: {
+    fontSize: 16,
+    marginTop: 4,
+    color: '#666',
+  },
   authorText: {
     fontSize: 12,
     marginTop: 4,
@@ -189,37 +205,9 @@ const styles = StyleSheet.create({
     fontSize: 11,
     marginTop: 4,
   },
-  viewAction: {
-    marginTop: 12,
-    padding: 8,
-    backgroundColor: '#f8f8f8',
-    borderRadius: 6,
-    alignItems: 'center',
-  },
-  viewActionText: {
-    fontSize: 12,
-    color: '#666',
-    fontStyle: 'italic',
-  },
   gridContainer: {
     justifyContent: 'space-between',
     marginBottom: 12,
-    paddingHorizontal: 16,
-  },
-  headerImage: {
-    height: 200,
-    width: '100%',
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-  popularSection: {
-    paddingHorizontal: 16,
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    marginBottom: 12,
-    fontSize: 20,
   },
   genreScroll: {
     paddingVertical: 8,
