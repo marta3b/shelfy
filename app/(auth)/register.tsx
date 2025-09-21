@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { storage } from '@/utils/storage';
 
 export default function RegisterScreen() {
@@ -33,9 +33,19 @@ export default function RegisterScreen() {
   };
 
   return (
+
+    <>
+      <Stack.Screen
+        options={{
+          title: 'Registrazione',
+          headerBackTitle: 'Indietro',
+        }}
+      />
+
     <View style={styles.container}>
       <Text style={styles.title}>Registrazione</Text>
       
+      <Text style={styles.subtitle}>Username</Text>
       <TextInput
         style={styles.input}
         placeholder="Nome"
@@ -43,6 +53,7 @@ export default function RegisterScreen() {
         onChangeText={setName}
       />
       
+      <Text style={styles.subtitle}>Email</Text>
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -52,6 +63,7 @@ export default function RegisterScreen() {
         keyboardType="email-address"
       />
       
+      <Text style={styles.subtitle}>Password</Text>
       <TextInput
         style={styles.input}
         placeholder="Password"
@@ -60,6 +72,7 @@ export default function RegisterScreen() {
         secureTextEntry
       />
       
+      <Text style={styles.subtitle}>Conferma password</Text>
       <TextInput
         style={styles.input}
         placeholder="Conferma Password"
@@ -77,19 +90,40 @@ export default function RegisterScreen() {
         onPress={() => router.push('/(auth)/login')} 
       />
     </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, justifyContent: 'center' },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
+  container: { 
+    flex: 1, 
+    padding: 20, 
+    justifyContent: 'center',
+    backgroundColor: 'rgba(173, 216, 230, 0.9)',
+  },
+  title: { 
+    fontSize: 24, 
+    fontWeight: '800', 
+    marginBottom: 20, 
+    textAlign: 'center',
+    color: '#000',
+  },
+  subtitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#000',
+    marginBottom: 4,
+    marginLeft: 4,
+  },
   input: { 
     borderWidth: 1, 
-    borderColor: '#ccc', 
+    borderColor: '#000', 
     padding: 15, 
     marginBottom: 15, 
     borderRadius: 8,
     fontSize: 16
   },
-  spacer: { height: 20 }
+  spacer: { 
+    height: 20 
+  }
 });
