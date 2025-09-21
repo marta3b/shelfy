@@ -106,7 +106,7 @@ export default function ProfileScreen() {
       <ThemedView style={styles.profileSection}>
         <View style={styles.profileHeader}>
           <Image 
-            source={require('@/assets/images/profile-image.png')}
+            source={{ uri: 'https://static.vecteezy.com/ti/vettori-gratis/p2/14194215-avatar-icona-umano-un-di-persona-distintivo-vettore-sociale-media-profilo-simbolo-il-simbolo-di-un-persona-vettoriale.jpg' }}
             style={styles.profileImage}
             contentFit="cover"
           />
