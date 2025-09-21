@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Image } from 'expo-image';
-import { View, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 
-import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 
@@ -42,7 +41,7 @@ export default function MyListScreen() {
           transition={1000}
         />
         <View style={styles.bookInfo}>
-          <ThemedText type="defaultSemiBold" numberOfLines={1}>{item.title}</ThemedText>
+          <ThemedText type="defaultSemiBold" numberOfLines={1} style={styles.titleText}>{item.title}</ThemedText>
           <ThemedText type="default" style={styles.authorText}>{item.author}</ThemedText>
           <ThemedText type="subtitle" style={styles.genreText}>{item.genre}</ThemedText>
         </View>
@@ -51,17 +50,9 @@ export default function MyListScreen() {
   );
 
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#E8F5E8', dark: '#1B3B1B' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/libri-bho.png')}
-          style={styles.headerImage}
-        />
-      }>
+    <View style={styles.container}>
       
       <ThemedView style={styles.header}>
-        <ThemedText type="title">La tua lista</ThemedText>
         <ThemedText style={styles.subtitle}>
           I libri che hai salvato per leggerli in seguito
         </ThemedText>
@@ -72,7 +63,7 @@ export default function MyListScreen() {
 
       {savedBooks.length === 0 ? (
         <ThemedView style={styles.emptyState}>
-          <Ionicons name="book-outline" size={48} color="#ccc" />
+          <Ionicons name="book-outline" size={48} color="#b7b6b6ff" />
           <ThemedText style={styles.emptyText}>
             La tua lista è vuota
           </ThemedText>
@@ -87,50 +78,62 @@ export default function MyListScreen() {
           </TouchableOpacity>
         </ThemedView>
       ) : (
-        <ThemedView style={styles.listSection}>
-          <ThemedText type="subtitle" style={styles.sectionTitle}>
-            I tuoi libri ({savedBooks.length})
-          </ThemedText>
-          
-          <FlatList
-            data={savedBooks}
-            renderItem={renderBookItem}
-            keyExtractor={item => item.id}
-            numColumns={2}
-            columnWrapperStyle={styles.gridContainer}
-            scrollEnabled={false}
-          />
-        </ThemedView>
+        <ScrollView style={styles.scrollView}>
+          <ThemedView style={styles.listSection}>
+            <ThemedText type="subtitle" style={styles.sectionTitle}>
+              I tuoi libri ({savedBooks.length})
+            </ThemedText>
+            
+            <FlatList
+              data={savedBooks}
+              renderItem={renderBookItem}
+              keyExtractor={item => item.id}
+              numColumns={2}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.gridContainer}
+              columnWrapperStyle={styles.columnWrapper}
+              scrollEnabled={false}
+            />
+          </ThemedView>
+        </ScrollView>
       )}
-    </ParallaxScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FFF9C4',
+  },
+  scrollView: {
+    flex: 1,
+  },
   header: {
     padding: 16,
-    paddingTop: 60,
+    paddingTop: 30,
     marginBottom: 24,
+    backgroundColor: 'rgba(180, 220, 180, 0.6)',
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
-    marginTop: 8,
+    color: '#000',
   },
   emptyState: {
     alignItems: 'center',
-    padding: 40,
-    marginTop: 60,
+    padding: 80,
+    marginTop: 35,
+    backgroundColor: 'rgba(180, 220, 180, 0.6)',
   },
   emptyText: {
     fontSize: 18,
-    color: '#666',
+    color: '#000',
     marginTop: 16,
     marginBottom: 8,
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#999',
+    color: '#494949ff',
     textAlign: 'center',
     marginBottom: 20,
   },
@@ -146,14 +149,21 @@ const styles = StyleSheet.create({
   },
   listSection: {
     paddingHorizontal: 16,
+    padding: 20,
+    backgroundColor: 'rgba(180, 220, 180, 0.6)',
   },
   sectionTitle: {
     marginBottom: 16,
+    color: 'black',
+  },
+  columnWrapper: {
+    justifyContent: 'space-between',
+    gap: 16,
+    marginBottom: 16,
   },
   bookCard: {
-    width: '48%',
-    marginBottom: 16,
-    marginRight: '4%',
+    width: 140,
+    marginRight: 12,
     borderRadius: 12,
     overflow: 'hidden',
     backgroundColor: 'white',
@@ -165,42 +175,27 @@ const styles = StyleSheet.create({
   },
   bookImage: {
     width: '100%',
-    height: 200,
+    height: 180,
   },
   bookInfo: {
-    padding: 12,
+    padding: 10,
+  },
+  titleText: {
+    fontSize: 16,
+    color: '#000',
   },
   authorText: {
-    fontSize: 14,
+    fontSize: 12,
     marginTop: 4,
     color: '#666',
   },
   genreText: {
     color: '#888',
-    fontSize: 12,
+    fontSize: 11,
     marginTop: 4,
   },
-  viewAction: {
-    marginTop: 12,
-    padding: 8,
-    backgroundColor: '#f8f8f8',
-    borderRadius: 6,
-    alignItems: 'center',
-  },
-  viewActionText: {
-    fontSize: 12,
-    color: '#666',
-    fontStyle: 'italic',
-  },
   gridContainer: {
-    justifyContent: 'space-between',
-  },
-  headerImage: {
-    height: 200,
-    width: '100%',
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+    paddingBottom: 20, // Aggiungi padding per evitare che l'ultimo elemento sia tagliato
   },
   countText: {
     fontSize: 14,
