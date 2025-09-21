@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter,Stack  } from 'expo-router';
 import { Image } from 'expo-image';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
@@ -74,13 +74,15 @@ export default function BookDetailScreen() {
   }
 
   return (
+    <>
+      <Stack.Screen
+        options={{
+          title: 'Dettagli Libro',
+          headerBackTitle: 'Indietro',
+        }}
+      />
+
     <ScrollView style={styles.container}>
-      <ThemedView style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <ThemedText type="title">{book.title}</ThemedText>
-      </ThemedView>
 
       <ThemedView style={styles.bookContainer}>
         <Image 
@@ -105,7 +107,7 @@ export default function BookDetailScreen() {
                 size={20} 
                 color={isRead ? "#2E8B57" : "#666"} 
               />
-              <ThemedText style={[styles.statusButtonText, isRead && { color: "#2E8B57" }]}>
+              <ThemedText style={[styles.statusButtonText, !isRead && { color: "#000" },isRead && { color: "#2E8B57" }]}>
                 {isRead ? "Letto" : "Segna come letto"}
               </ThemedText>
             </TouchableOpacity>
@@ -161,33 +163,27 @@ export default function BookDetailScreen() {
               onPress={() => Linking.openURL(`https://www.amazon.it/s?k=${encodeURIComponent(book.title + ' ' + book.author)}`)}
             >
               <Ionicons name="logo-amazon" size={20} color="#FF9900" />
-              <ThemedText style={styles.simpleButtonText}>Cerca su Amazon</ThemedText>
+              <ThemedText style={styles.simpleButtonTextA}>Cerca su Amazon</ThemedText>
             </TouchableOpacity>
           </View>
         </ThemedView>
       </ThemedView>
     </ScrollView>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-  },
-  backButton: {
-    marginRight: 16,
+    backgroundColor: 'rgba(158, 239, 158, 0.72)',
   },
   bookContainer: {
     padding: 16,
   },
   bookImage: {
     width: '100%',
-    height: 300,
+    height: 500,
     borderRadius: 8,
     marginBottom: 16,
   },
@@ -200,12 +196,12 @@ const styles = StyleSheet.create({
   },
   author: {
     fontSize: 18,
-    color: '#666',
+    color: '#b9b9b9ff',
     marginBottom: 4,
   },
   genre: {
     fontSize: 16,
-    color: '#888',
+    color: '#b9b9b9ff',
     marginBottom: 16,
   },
   statusContainer: {
@@ -214,7 +210,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 20,
     padding: 12,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: 'rgba(180, 220, 180, 0.7)',
     borderRadius: 12,
   },
   statusButton: {
@@ -222,12 +218,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 8,
     borderRadius: 8,
-    flex: 1,
   },
   readButton: {
+    paddingRight:90,
     backgroundColor: '#E8F5E8',
   },
   unreadButton: {
+    paddingRight: 10,
     backgroundColor: '#f0f0f0',
   },
   statusButtonText: {
@@ -254,20 +251,20 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 16,
     marginBottom: 8,
-    color: '#333',
+    color: '#FFF',
   },
   description: {
     fontSize: 16,
     lineHeight: 22,
     marginBottom: 16,
-    color: '#444',
+    color: '#FFF',
   },
   plot: {
     fontSize: 16,
     lineHeight: 24,
-    color: '#444',
+    color: '#FFF',
     textAlign: 'justify',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   technicalDetails: {
     marginVertical: 16,
@@ -279,7 +276,7 @@ const styles = StyleSheet.create({
   detail: {
     fontSize: 16,
     marginBottom: 8,
-    color: '#555',
+    color: '#FFF',
   },
   starIcon: {
     marginLeft: 4,
@@ -297,6 +294,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     flex: 1,
     justifyContent: 'center',
+    marginBottom:80,
+    borderColor: '#FFF',
+    borderWidth: 1,
   },
   addButton: {
     backgroundColor: '#f8f8f8',
@@ -310,5 +310,12 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 14,
     fontWeight: '500',
+    color: '#000',
+  },
+  simpleButtonTextA: {
+    marginLeft: 8,
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#fff0f0',
   },
 });
