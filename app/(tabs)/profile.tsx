@@ -1,12 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Image } from 'expo-image';
-import { View, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 
-import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
 
 import { Book } from '@/constants/booksData';
 import { getSavedBooks, onSavedBooksChange } from '@/constants/savedBooksData';
@@ -26,7 +24,7 @@ export default function ProfileScreen() {
   const loadUserData = async () => {
     const userData = await storage.getUser();
     setUser(userData);
-    setAlertShown(false); // Reset dell'alert quando i dati vengono ricaricati
+    setAlertShown(false);
   };
 
   const loadBooksData = () => {
@@ -37,7 +35,6 @@ export default function ProfileScreen() {
     setReadBooks(readBooksData);
   };
 
-  // Usa useFocusEffect per ricaricare i dati quando la schermata diventa attiva
   useFocusEffect(
     useCallback(() => {
       loadUserData();
@@ -60,7 +57,6 @@ export default function ProfileScreen() {
     }, [])
   );
 
-  // Mostra l'alert solo quando il componente è montato e l'utente non è autenticato
   useEffect(() => {
     if (!user && !alertShown) {
       setAlertShown(true);
@@ -88,20 +84,9 @@ export default function ProfileScreen() {
     Alert.alert('Logout', 'Sei stato disconnesso con successo');
   };
 
-  // Se l'utente non è autenticato, mostra solo l'header senza contenuto
   if (!user) {
     return (
-      <ParallaxScrollView
-        headerBackgroundColor={{ light: '#E8F5E8', dark: '#1B3B1B' }}
-        headerImage={
-          <IconSymbol
-            size={310}
-            color="#74C365"
-            name="person.crop.circle.fill"
-            style={styles.headerImage}
-          />
-        }>
-        
+      <ScrollView style={styles.container}>
         <ThemedView style={styles.notAuthenticatedContainer}>
           <Ionicons name="lock-closed" size={64} color="#ccc" />
           <ThemedText type="title" style={styles.notAuthenticatedTitle}>
@@ -111,21 +96,12 @@ export default function ProfileScreen() {
             Accedi o registrati per sbloccare tutte le funzionalità
           </ThemedText>
         </ThemedView>
-      </ParallaxScrollView>
+      </ScrollView>
     );
   }
 
     return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#E8F5E8', dark: '#1B3B1B' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#74C365"
-          name="person.crop.circle.fill"
-          style={styles.headerImage}
-        />
-      }>
+    <ScrollView style={styles.container}>
       
       <ThemedView style={styles.profileSection}>
         <View style={styles.profileHeader}>
@@ -163,8 +139,7 @@ export default function ProfileScreen() {
         </View>
       </ThemedView>
 
-      {/* SEZIONE PREFERITI CLICCABILE */}
-      <ThemedView style={styles.favoritesSection}>
+      <ThemedView style={styles.container}>
         <TouchableOpacity 
           onPress={() => router.push('/(tabs)/my-list')}
           style={styles.favoritesButton}
@@ -186,14 +161,14 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </ThemedView>
 
-      <ThemedView style={styles.readSection}>
-        <ThemedText type="title" style={styles.sectionTitle}>
+      <ThemedView style={styles.container}>
+        <ThemedText type="title" style={styles.sectionReadTitle}>
           Libri Letti ({readBooks.length})
         </ThemedText>
 
         {readBooks.length === 0 ? (
           <ThemedView style={styles.emptyState}>
-            <Ionicons name="book-outline" size={48} color="#ccc" />
+            <Ionicons name="book-outline" size={48} color="#a5a5a5ff" />
             <ThemedText style={styles.emptyText}>
               Nessun libro letto
             </ThemedText>
@@ -212,7 +187,6 @@ export default function ProfileScreen() {
                   style={styles.readBookItem}
                   onPress={() => router.push(`/book/${item.id}`)}
                 >
-                  {/* Icona di checkmark fissa (non cliccabile) */}
                   <View style={styles.checkboxContainer}>
                     <Ionicons 
                       name="checkmark-circle" 
@@ -246,7 +220,6 @@ export default function ProfileScreen() {
         )}
       </ThemedView>
 
-
       <ThemedView style={styles.actionsSection}>
         <ThemedText type="subtitle" style={styles.sectionTitle}>
           Azioni
@@ -272,19 +245,19 @@ export default function ProfileScreen() {
           </ThemedText>
         </TouchableOpacity>
       </ThemedView>
-    </ParallaxScrollView>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  container: {
+    flex: 1,
+    backgroundColor:'#FFF9C4',
   },
   profileSection: {
     padding: 20,
     marginBottom: 20,
+    backgroundColor: 'rgba(180, 220, 180, 0.6)',
   },
   profileHeader: {
     flexDirection: 'row',
@@ -303,6 +276,7 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 24,
     marginBottom: 4,
+    color: 'black',
   },
   userStats: {
     fontSize: 16,
@@ -314,7 +288,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#f8f8f8',
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 16,
   },
   statItem: {
     alignItems: 'center',
@@ -334,47 +308,38 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 4,
   },
-  favoritesSection: {
-    padding: 20,
-    marginBottom: 20,
-  },
-  readSection: {
-    padding: 20,
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    marginBottom: 16,
+  sectionReadTitle: {
+    marginTop: 20,
+    paddingTop: 10,
+    paddingBottom: 10,
+    paddingLeft: 10,
+    fontSize: 26,
+    color: 'black',
+    backgroundColor: 'rgba(180, 220, 180, 0.6)',
   },
   emptyState: {
     alignItems: 'center',
-    padding: 40,
+    paddingTop: 40,
+    paddingBottom: 30,
+    marginBottom: 60,
+    backgroundColor: 'rgba(180, 220, 180, 0.6)',
   },
   emptyText: {
     fontSize: 18,
-    color: '#666',
+    color: '#000',
     marginTop: 16,
     marginBottom: 8,
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#999',
+    color: '#393939ff',
     textAlign: 'center',
     marginBottom: 20,
   },
-  homeButton: {
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  homeButtonText: {
-    color: 'white',
-    fontWeight: '600',
-  },
-  readBooksList: {
-    backgroundColor: '#f8f8f8',
+  readBooksContainer: {
+    backgroundColor: 'rgba(180, 220, 180, 0.6)',
     padding: 16,
-    borderRadius: 12,
+    marginBottom: 60,
   },
   readBookItem: {
     flexDirection: 'row',
@@ -384,19 +349,49 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 8,
   },
+  checkboxContainer: {
+    marginRight: 12,
+  },
+  readBookInfo: {
+    flex: 1,
+  },
   readBookTitle: {
-    marginLeft: 12,
     flex: 1,
     color: '#333',
   },
-  moreText: {
-    textAlign: 'center',
+  readBookAuthor: {
+    fontSize: 14,
     color: '#666',
-    fontStyle: 'italic',
-    marginTop: 8,
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2E8B57',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginLeft: 8,
+  },
+  ratingText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  separator: {
+    height: 1,
+    backgroundColor: '#eee',
+    marginVertical: 8,
   },
   actionsSection: {
     padding: 20,
+    paddingTop: 10,
+    backgroundColor: 'rgba(180, 220, 180, 0.6)'
+  },
+  sectionTitle: {
+    marginTop: 10,
+    marginBottom: 16,
+    color: 'black',
   },
   actionButton: {
     flexDirection: 'row',
@@ -408,6 +403,7 @@ const styles = StyleSheet.create({
   actionButtonText: {
     marginLeft: 12,
     fontSize: 16,
+    color: 'black',
   },
   notAuthenticatedContainer: {
     flex: 1,
@@ -427,11 +423,14 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   favoritesButton: {
-    backgroundColor: '#f8f8f8',
-    padding: 20,
+    backgroundColor: 'white',
+    padding: 12,
+    marginBottom: 20,
+    marginLeft: 5,
+    marginRight: 5,
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderWidth: 10,
+    borderColor: 'rgba(180, 220, 180, 0.6)',
   },
   favoritesContent: {
     flexDirection: 'row',
@@ -455,40 +454,5 @@ const styles = StyleSheet.create({
   favoritesSubtitle: {
     fontSize: 14,
     color: '#666',
-  },
-  readBooksContainer: {
-    backgroundColor: '#f8f8f8',
-    padding: 16,
-    borderRadius: 12,
-  },
-  checkboxContainer: {
-    marginRight: 12,
-  },
-  readBookInfo: {
-    flex: 1,
-  },
-  readBookAuthor: {
-    fontSize: 14,
-    color: '#666',
-  },
-    ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#2E8B57',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    marginLeft: 8,
-  },
-   ratingText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: '600',
-    marginLeft: 4,
-  },
-  separator: {
-    height: 1,
-    backgroundColor: '#eee',
-    marginVertical: 8,
   },
 });
