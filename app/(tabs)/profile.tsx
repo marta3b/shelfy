@@ -106,7 +106,7 @@ export default function ProfileScreen() {
       <ThemedView style={styles.profileSection}>
         <View style={styles.profileHeader}>
           <Image 
-            source={require('@/assets/images/profile.png')}
+            source={require('@/assets/images/profile-image.png')}
             style={styles.profileImage}
             contentFit="cover"
           />
